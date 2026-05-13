@@ -1,0 +1,4 @@
+{
+    "mqtt_broker": "test.mosquitto.org",
+    "mqtt_topic": "equipo/BOT-AZOTEA-n1krov-01"
+}
