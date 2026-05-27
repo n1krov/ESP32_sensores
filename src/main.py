@@ -29,7 +29,7 @@ async def main():
     sensors = SensorManager()
     mqtt = MQTTManager()
     bot = TelegramBot(sensors, wifi)
-    health = Watchdog(wifi)
+    health = Watchdog(wifi, bot=bot)
 
     # Conectar WiFi inicialmente
     if await wifi.connect():

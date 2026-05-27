@@ -59,7 +59,39 @@ class TelegramBot:
                 msg += f"Hum: {data['humidity']}%\n"
                 msg += f"Combustible: {data['fuel_percent']}%\n"
                 msg += f"Voltaje: {data['voltage']}V\n"
-                msg += f"WiFi: {self.wifi_manager.get_ip()}"
+                msg += f"WiFi: {self.wifi_manager.get_ip()}\n"
+                
+                # Obtener información del reinicio programado
+                import time
+                import ujson
+                
+                last_reboot = 0
+                try:
+                    with open('last_reboot.json', 'r') as f:
+                        reboot_data = ujson.load(f)
+                        last_reboot = reboot_data.get("last_reboot_timestamp", 0)
+                except Exception:
+                    pass
+                
+                current_tm = time.localtime()
+                if current_tm[0] > 2025:
+                    timezone_offset = getattr(config, 'TIMEZONE_OFFSET', -3)
+                    if last_reboot > 0:
+                        local_epoch = last_reboot + (timezone_offset * 3600)
+                        tm = time.localtime(local_epoch)
+                        fecha_str = "{:02d}/{:02d} {:02d}:{:02d}".format(tm[2], tm[1], tm[3], tm[4])
+                        
+                        proximo_epoch = last_reboot + (getattr(config, 'REBOOT_INTERVAL_DAYS', 3) * 24 * 3600)
+                        local_proximo = proximo_epoch + (timezone_offset * 3600)
+                        tm_p = time.localtime(local_proximo)
+                        fecha_p_str = "{:02d}/{:02d} 03:00-05:00".format(tm_p[2], tm_p[1])
+                        
+                        msg += f"\nUltimo reinicio: {fecha_str}\nProx. reinicio: {fecha_p_str}"
+                    else:
+                        msg += "\nReinicio: Pendiente del primer ciclo"
+                else:
+                    msg += "\nReinicio: Esperando sinc. hora NTP"
+                    
                 await self.send_message(chat_id, msg)
 
             elif text == "/temp":

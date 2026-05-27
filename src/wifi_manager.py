@@ -22,12 +22,32 @@ class WiFiManager:
         for _ in range(20):
             if self.wlan.isconnected():
                 print(f"WiFi Conectado! IP: {self.wlan.ifconfig()[0]}")
+                # Lanzar tarea de sincronización de hora en segundo plano
+                asyncio.create_task(self.sync_time_background())
                 return True
             self.led.value(not self.led.value()) # Blink mientras conecta
             await asyncio.sleep(1)
             
         print("Fallo la conexión WiFi")
         self.led.value(0)
+        return False
+
+    async def sync_time_background(self):
+        """Intenta sincronizar la hora por NTP con reintentos"""
+        import ntptime
+        
+        # Esperar 2 segundos para asegurar la estabilidad de la red y resolución de DNS
+        await asyncio.sleep(2)
+        
+        for intento in range(3):
+            try:
+                print(f"WiFiManager: Sincronizando hora con NTP (intento {intento+1})...")
+                ntptime.settime()
+                print("WiFiManager: Sincronizacion NTP exitosa. Hora actual (UTC):", time.localtime())
+                return True
+            except Exception as e:
+                print(f"WiFiManager: Error en sincronizacion NTP (intento {intento+1}): {e}")
+                await asyncio.sleep(5)
         return False
 
     def is_connected(self):
